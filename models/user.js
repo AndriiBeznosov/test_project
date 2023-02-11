@@ -13,7 +13,7 @@ const schema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true
+      required: true,
     },
     avatarUrl: String,
   },
@@ -22,5 +22,4 @@ const schema = new mongoose.Schema(
     versionKey: false,
   },
 );
-
 export default mongoose.model("User", schema);
