@@ -22,4 +22,5 @@ const schema = new mongoose.Schema(
     versionKey: false,
   },
 );
+
 export default mongoose.model("User", schema);
