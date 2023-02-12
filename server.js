@@ -1,112 +1,89 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
-import jwt from "jsonwebtoken";
-import bcryptjs from "bcryptjs";
+import multer from "multer";
+import cors from "cors";
 
 import mongoose from "mongoose";
-import { validationResult } from "express-validator";
 
-import { registerValidation } from "./validation/auth.js";
-import UserModel from "./models/user.js";
+import { registerValidation, loginValidation } from "./validation/auth.js";
+import { postCreateValidation } from "./validation/post.js";
+import checkAuth from "./utils/checkAuth.js";
+import { UserController, PostController } from "./controllers/index.js";
+import hendleValidationErrors from "./utils/hendleValidationErrors.js";
 
-const { URL_MONGODB, SECRET } = process.env;
+const { URL_MONGODB, PORT } = process.env;
 
 mongoose.set("strictQuery", false);
-
 mongoose
   .connect(URL_MONGODB)
   .then(() => console.log("DB OK"))
   .catch((err) => console.error("DB error", err));
 
 const app = express();
+
+const storage = multer.diskStorage({
+  destination: (_, __, cd) => {
+    cd(null, "uploads");
+  },
+  filename: (_, file, cd) => {
+    cd(null, file.originalname);
+  },
+});
+const upload = multer({ storage });
+
 app.use(express.json());
+app.use(cors());
+app.use("/uploads", express.static("uploads"));
 
 app.get("/", (req, res) => {
   res.send("Hello world!");
 });
 
-app.post("/auth/register", registerValidation, async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json(errors.array());
-    }
-    const passwordUser = req.body.password;
-    const salt = await bcryptjs.genSalt(10);
-    const hash = await bcryptjs.hash(passwordUser, salt);
-
-    const doc = new UserModel({
-      email: req.body.email,
-      password: hash,
-      fullName: req.body.fullName,
-      avatarUrl: req.body.avatarUrl,
-    });
-
-    const user = await doc.save();
-
-    const token = jwt.sign(
-      {
-        _id: user._id,
-      },
-      SECRET,
-      {
-        expiresIn: "30d",
-      },
-    );
-
-    const { password, ...userData } = user._doc;
-
-    res.json({ ...userData, token });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Не вдалось пройти регистрацію",
-    });
-  }
+//image
+app.post("/upload", checkAuth, upload.single("image"), (req, res) => {
+  res.json({ url: `/uploads/${req.file.originalname}` });
 });
 
-app.post("/auth/login", async (req, res) => {
-  try {
-    const user = await UserModel.findOne({ email: req.body.email });
-    if (!user) {
-      return res.status(400).json({
-        message: "Користувач не зареєстрований",
-      });
-    }
+// User
+app.post(
+  "/auth/register",
 
-    const isValidPass = await bcryptjs.compare(
-      req.body.password,
-      user._doc.password,
-    );
-    if (!isValidPass) {
-      return res.status(400).json({ message: "Не вірний логін чи пароль" });
-    }
+  registerValidation,
+  hendleValidationErrors,
+  UserController.register,
+);
+app.post(
+  "/auth/login",
+  loginValidation,
+  hendleValidationErrors,
+  UserController.login,
+);
+app.get("/auth/me", checkAuth, UserController.getMe);
+app.get("/tegs", PostController.getLastTags);
+//Post
+app.get("/posts", PostController.getAll);
+app.get("/posts/tegs", PostController.getLastTags);
+app.get("/posts/:id", PostController.getOne);
+app.post(
+  "/posts",
+  checkAuth,
+  postCreateValidation,
+  hendleValidationErrors,
+  PostController.create,
+);
+app.delete("/posts/:id", checkAuth, PostController.remote);
+app.patch(
+  "/posts/:id",
+  checkAuth,
+  postCreateValidation,
+  hendleValidationErrors,
+  PostController.update,
+);
 
-    const token = jwt.sign(
-      {
-        _id: user._id,
-      },
-      SECRET,
-      {
-        expiresIn: "30d",
-      },
-    );
-
-    const { password, ...userData } = user._doc;
-
-    res.json({ ...userData, token });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      message: "Не вдалось зайти в систему ",
-    });
-  }
-});
-
-app.listen(5000, (err) => {
+app.listen(PORT, (err) => {
   if (err) {
     return console.error(err);
   }
-  console.log("Conect server PORT 5000");
+  console.log("Conect server PORT 4444");
 });

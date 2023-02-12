@@ -10,3 +10,10 @@ export const registerValidation = [
     .optional()
     .isURL(),
 ];
+
+export const loginValidation = [
+  body("email", "Не вірний формат пошти").isEmail(),
+  body("password", "Пароль повинен бути мінимум 5 символів").isLength({
+    min: 5,
+  }),
+];
