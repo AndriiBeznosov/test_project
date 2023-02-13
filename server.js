@@ -40,10 +40,12 @@ app.use("/uploads", express.static("uploads"));
 app.get("/", (req, res) => {
   res.send("Hello world!");
 });
+
 //image
 app.post("/upload", checkAuth, upload.single("image"), (req, res) => {
   res.json({ url: `/uploads/${req.file.originalname}` });
 });
+
 // User
 app.post(
   "/auth/register",
@@ -60,6 +62,7 @@ app.post(
 );
 app.get("/auth/me", checkAuth, UserController.getMe);
 app.get("/tegs", PostController.getLastTags);
+
 //Post
 app.get("/posts", PostController.getAll);
 app.get("/posts/tegs", PostController.getLastTags);
