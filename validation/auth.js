@@ -1,7 +1,6 @@
 import { body } from "express-validator";
 
 export const registerValidation = [
-  body("email", "Не вірний формат пошти").isEmail(),
   body("password", "Пароль повинен бути мінимум 5 символів").isLength({
     min: 5,
   }),
