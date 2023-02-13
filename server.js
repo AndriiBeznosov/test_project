@@ -61,6 +61,9 @@ app.post(
 );
 app.get("/auth/me", checkAuth, UserController.getMe);
 app.get("/tegs", PostController.getLastTags);
+// app.get("/tegs", PostController.getLastTags);
+// app.get("/tegs", PostController.getLastTags);
+
 //Post
 app.get("/posts", PostController.getAll);
 app.get("/posts/tegs", PostController.getLastTags);
