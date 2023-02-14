@@ -9,12 +9,12 @@ export const getLastTags = async (req, res) => {
     //   return res.status(500).json({ message: "Не вдалось отримати пости" });
     // }
 
-    const tags = posts
+    const tegs = posts
       .map((obj) => obj.tegs)
       .flat()
       .slice(0, 5);
 
-    res.json(tags);
+    res.json(tegs);
   } catch (error) {
     res.status(500).json({
       message: "Не вдалось отримати статтi ",
