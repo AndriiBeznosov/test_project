@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import fs from "fs";
 import multer from "multer";
 import cors from "cors";
 
@@ -24,6 +25,10 @@ const app = express();
 
 const storage = multer.diskStorage({
   destination: (_, __, cd) => {
+    if (!fs.existsSync("uploads")) {
+      fs.mkdirSync("uploads");
+    }
+
     cd(null, "uploads");
   },
   filename: (_, file, cd) => {
@@ -83,7 +88,7 @@ app.patch(
   PostController.update,
 );
 
-app.listen(PORT, (err) => {
+app.listen(PORT || 4444, (err) => {
   if (err) {
     return console.error(err);
   }
